@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reactive.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 
@@ -53,7 +52,55 @@ namespace Blu4Net.Channel
             }
         }
 
-        private async Task<XDocument> SendRequest(string request, NameValueCollection parameters, TimeSpan timeout, CancellationToken cancellationToken)
+        private async Task<string> SendRequest(Uri requestUri, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            using var client = new HttpClient() { Timeout = timeout };
+            client.DefaultRequestHeaders.AcceptLanguage.TryParseAdd(AcceptLanguage.Name);
+
+            using var response = await client.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
+            var xml = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            LogMessage(xml);
+
+#if FILE_LOGGING
+            System.IO.File.WriteAllText(@$"D:\Temp\{Interlocked.Increment(ref counter)}.txt", xml);
+#endif
+
+            return xml;
+        }
+
+        private async Task<T> SendRequest<T>(Uri requestUri, IDictionary<string, Type> derivedTypes, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            var xml = await SendRequest(requestUri, timeout, cancellationToken);
+
+            if (derivedTypes == null)
+            {
+                return (T)new XmlSerializer(typeof(T)).Deserialize(new StringReader(xml));
+            }
+
+            using var reader = XmlReader.Create(new StringReader(xml));
+            reader.MoveToContent();
+
+            foreach (var item in derivedTypes)
+            {
+                if (reader.Name == item.Key)
+                {
+                    return (T)new XmlSerializer(item.Value).Deserialize(new StringReader(xml));
+                }
+            }
+
+            throw new Exception($"Encountered invalid xml: {xml}");
+        }
+
+        private Task<T> SendRequest<T>(Uri requestUri, IDictionary<string, Type> derivedTypes)
+        {
+            if (requestUri == null)
+                throw new ArgumentNullException(nameof(requestUri));
+
+            return SendRequest<T>(requestUri, derivedTypes, Timeout, CancellationToken.None);
+        }
+
+        private async Task<T> SendRequest<T>(string request, NameValueCollection parameters, IDictionary<string, Type> derivedTypes, TimeSpan timeout, CancellationToken cancellationToken)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -64,51 +111,22 @@ namespace Blu4Net.Channel
                 Query = parameters != null && parameters.Count > 0 ? parameters.ToString() : null,
             }.Uri;
 
-            LogMessage($"Request: {requestUri}");
-            
-            using (var client = new HttpClient() { Timeout = timeout })
-            {
-                client.DefaultRequestHeaders.AcceptLanguage.TryParseAdd(AcceptLanguage.Name);
-
-                using (var response = await client.GetAsync(requestUri, cancellationToken).ConfigureAwait(false))
-                using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
-                {
-                    var document = XDocument.Load(stream);
-
-                    LogMessage($"Response: {document}");
-
-#if FILE_LOGGING
-                    document.Save(@$"D:\Temp\{Interlocked.Increment(ref counter)}.txt");
-#endif
-
-                    return document;
-                }
-            }
-        }
-
-        private Task<XDocument> SendRequest(string request, NameValueCollection parameters = null)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            return SendRequest(request, parameters, Timeout, CancellationToken.None);
+            return await SendRequest<T>(requestUri, derivedTypes, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task<T> SendRequest<T>(string request, NameValueCollection parameters, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            var document = await SendRequest(request, parameters, timeout, cancellationToken).ConfigureAwait(false);
-            return document.Deserialize<T>();
+            return await SendRequest<T>(request, parameters, null, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         private Task<T> SendRequest<T>(string request, NameValueCollection parameters = null)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
             return SendRequest<T>(request, parameters, Timeout, CancellationToken.None);
+        }
+
+        private Task<T> SendRequest<T>(string request, IDictionary<string, Type> derivedTypes, NameValueCollection parameters = null)
+        {
+            return SendRequest<T>(request, parameters, derivedTypes, Timeout, CancellationToken.None);
         }
 
         private IObservable<T> LongPolling<T>(string request, int timeout) where T : ILongPollingResponse
@@ -365,66 +383,42 @@ namespace Blu4Net.Channel
             var parameters = HttpUtility.ParseQueryString(string.Empty);
             parameters["id"] = id.ToString();
             
-            var document = await SendRequest("Preset", parameters).ConfigureAwait(false);
-            if (document.Root.Name == "loaded")
+            var types = new Dictionary<string, Type>
             {
-                return document.Deserialize<PlaylistLoadedResponse>();
-            }
-            if (document.Root.Name == "state")
-            {
-                return document.Deserialize<StreamLoadedResponse>();
-            }
-            throw new InvalidDataException();
+                { "loaded", typeof(PlaylistLoadedResponse) },
+                { "state", typeof(StreamLoadedResponse) }
+            };
+
+            return await SendRequest<LoadedResponse>("Preset", types, parameters).ConfigureAwait(false);
         }
 
         public async Task<LoadedResponse> PlayURL(string playURL)
         {
-            var parts = playURL.Split(new char[] { '?' });
-            var parameters = HttpUtility.ParseQueryString(parts[1]);
+            var types = new Dictionary<string, Type>
+            {
+                { "loaded", typeof(PlaylistLoadedResponse) },
+                { "state", typeof(StreamLoadedResponse) },
+                { "addsong", typeof(AddSongResponse) }
+            };
 
-            var document = await SendRequest(parts[0], parameters).ConfigureAwait(false);
-            if (document.Root.Name == "loaded")
-            {
-                return document.Deserialize<PlaylistLoadedResponse>();
-            }
-            else if (document.Root.Name == "state")
-            {
-                return document.Deserialize<StreamLoadedResponse>();
-            }
-            else if (document.Root.Name == "addsong")
-            {
-                return document.Deserialize<AddSongResponse>();
-            }
-            throw new InvalidDataException();
-        }
+            return await SendRequest<LoadedResponse>(new Uri(playURL), types).ConfigureAwait(false);
+         }
 
         public async Task<ActionResponse> ActionURL(string actionURL)
         {
             var parts = actionURL.Split(new char[] { '?' });
             var parameters = HttpUtility.ParseQueryString(parts[1]);
 
-            var document = await SendRequest(parts[0], parameters).ConfigureAwait(false);
-            if (document.Root.Name == "response")
+            var types = new Dictionary<string, Type>
             {
-                return document.Deserialize<NotificationActionResponse>();
-            }
-            else if (document.Root.Name == "back")
-            {
-                return document.Deserialize<BackActionResponse>();
-            }
-            else if (document.Root.Name == "skip")
-            {
-                return document.Deserialize<SkipActionResponse>();
-            }
-            else if (document.Root.Name == "love")
-            {
-                return document.Deserialize<LoveActionResponse>();
-            }
-            else if (document.Root.Name == "ban")
-            {
-                return document.Deserialize<BackActionResponse>();
-            }
-            throw new InvalidDataException();
+                { "response", typeof(NotificationActionResponse) },
+                { "back", typeof(BackActionResponse) },
+                { "skip", typeof(SkipActionResponse) },
+                { "love", typeof(LoveActionResponse) },
+                { "ban", typeof(BanActionResponse) }
+            };
+
+            return await SendRequest<ActionResponse>(new Uri(actionURL), types).ConfigureAwait(false);
         }
 
         public async Task<BrowseContentResponse> BrowseContent(string key = null, string query = null)
@@ -453,9 +447,15 @@ namespace Blu4Net.Channel
             return response;
         }
 
-        public Task<XDocument> GetServices()
+        public async Task<XDocument> GetServices()
         {
-            return SendRequest("Services");
+            var requestUri = new UriBuilder(Endpoint)
+            {
+                Path = "Services",
+            }.Uri;
+
+            var xml =  await SendRequest(requestUri, Timeout, CancellationToken.None);
+            return XDocument.Parse(xml);
         }
     }
 }
