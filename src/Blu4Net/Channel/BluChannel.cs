@@ -106,8 +106,8 @@ namespace Blu4Net.Channel
 
         private async Task<T> SendRequest<T>(string request, NameValueCollection parameters, IDictionary<string, Type> derivedTypes, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            if (requestUri == null)
-                throw new ArgumentNullException(nameof(requestUri));
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
 
             var requestUri = new UriBuilder(Endpoint)
             {
@@ -116,11 +116,6 @@ namespace Blu4Net.Channel
             }.Uri;
 
             return await SendRequest<T>(requestUri, derivedTypes, timeout, cancellationToken).ConfigureAwait(false);
-        }
-
-        private async Task<T> SendRequest<T>(string request, NameValueCollection parameters, IDictionary<string, Type> derivedTypes, TimeSpan timeout, CancellationToken cancellationToken)
-        {
-            return await SendRequest<T>(request, parameters, null, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task<T> SendRequest<T>(string request, NameValueCollection parameters, TimeSpan timeout, CancellationToken cancellationToken)
