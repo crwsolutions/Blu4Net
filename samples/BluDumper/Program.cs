@@ -2,11 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace BluDumper
@@ -22,7 +18,7 @@ namespace BluDumper
 
                 var player = await BluPlayer.Connect(endpoint);
                 //player.Log = Console.Out;
-                
+
                 Console.WriteLine($"Player: {player.Name}");
                 Console.WriteLine(new string('=', 80));
 
@@ -70,7 +66,7 @@ namespace BluDumper
                     WriteInstructions();
                 }
             }
-            else 
+            else
             {
                 Console.WriteLine("No player found!");
                 Console.WriteLine("Press 'q' to quit");

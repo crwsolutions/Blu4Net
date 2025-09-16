@@ -1,15 +1,12 @@
 using Blu4Net;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Net;
-using System.Linq;
-using System.Threading.Tasks;
 using Blu4Net.Channel;
-using System;
-using System.Reactive.Linq;
-using System.Collections.Generic;
-using System.Diagnostics;
 using Blu4Net.Tests;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Globalization;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
 
 namespace ChannelTests
 {
@@ -58,7 +55,8 @@ namespace ChannelTests
                 {
                     await Channel.SetVolume(volume + 1);
                     await completion.Task;
-                };
+                }
+                ;
             }
             finally
             {
@@ -84,7 +82,8 @@ namespace ChannelTests
                 {
                     await Channel.SetVolume(volume + 1);
                     await completion.Task;
-                };
+                }
+                ;
             }
             finally
             {
@@ -110,7 +109,8 @@ namespace ChannelTests
                 {
                     await Channel.SetVolume(volume + 1);
                     await completion.Task;
-                };
+                }
+                ;
             }
             finally
             {

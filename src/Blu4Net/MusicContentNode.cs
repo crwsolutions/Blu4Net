@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Blu4Net
@@ -14,8 +13,8 @@ namespace Blu4Net
         private readonly string _nextKey;
 
         public MusicContentNode Parent { get; }
-        public string ServiceName { get; } 
-        public Uri ServiceIconUri { get; } 
+        public string ServiceName { get; }
+        public Uri ServiceIconUri { get; }
         public IReadOnlyCollection<MusicContentEntry> Entries { get; }
         public IReadOnlyCollection<MusicContentCategory> Categories { get; }
 
@@ -53,7 +52,7 @@ namespace Blu4Net
         {
             get { return _nextKey != null; }
         }
-        
+
         public async Task<MusicContentNode> ResolveNext()
         {
             var response = await _channel.BrowseContent(_nextKey).ConfigureAwait(false);

@@ -2,10 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Blu4Net
@@ -25,7 +22,7 @@ namespace Blu4Net
             .SelectAsync(async _ => await GetInfo().ConfigureAwait(false));
         }
 
-        public async Task<PlayQueueInfo>  GetInfo()
+        public async Task<PlayQueueInfo> GetInfo()
         {
             var status = await _channel.GetPlaylistStatus().ConfigureAwait(false);
             return new PlayQueueInfo(status);

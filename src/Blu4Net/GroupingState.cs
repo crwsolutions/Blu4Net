@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Blu4Net.Channel;
+using System;
 using System.Collections.Generic;
-using Blu4Net.Channel;
 
 namespace Blu4Net
 {

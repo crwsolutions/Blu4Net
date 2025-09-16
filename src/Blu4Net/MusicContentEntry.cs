@@ -1,8 +1,6 @@
 ﻿using Blu4Net.Channel;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Blu4Net
@@ -13,20 +11,20 @@ namespace Blu4Net
         private readonly string _key;
         private readonly string _contextMenuKey;
 
-        public MusicContentNode Node { get;}
-        public string Name { get;}
-        public string Text2 { get;}
+        public MusicContentNode Node { get; }
+        public string Name { get; }
+        public string Text2 { get; }
         public string PlayURL { get; }
         public string AutoplayURL { get; }
         public string ActionURL { get; }
-        public string Type { get;}
+        public string Type { get; }
         public Uri ImageUri { get; }
 
         public MusicContentEntry(BluChannel channel, MusicContentNode node, BrowseContentResponse.Item item)
         {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             Node = node ?? throw new ArgumentNullException(nameof(node));
-            
+
             if (item == null)
                 throw new ArgumentNullException(nameof(item));
 

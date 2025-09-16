@@ -1,10 +1,8 @@
 using Blu4Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
-using System.Threading.Tasks;
-using System;
 using System.Reactive.Linq;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace EnvironmentTests
 {

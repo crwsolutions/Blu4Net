@@ -437,7 +437,7 @@ namespace Blu4Net.Channel
         {
             var parameters = HttpUtility.ParseQueryString(string.Empty);
             parameters["id"] = id.ToString();
-            
+
             var types = new Dictionary<string, Type>
             {
                 { "loaded", typeof(PlaylistLoadedResponse) },
@@ -457,7 +457,7 @@ namespace Blu4Net.Channel
             };
 
             return await SendRequest<LoadedResponse>(new Uri(playURL), types).ConfigureAwait(false);
-         }
+        }
 
         public async Task<ActionResponse> ActionURL(string actionURL)
         {
@@ -509,7 +509,7 @@ namespace Blu4Net.Channel
                 Path = "Services",
             }.Uri;
 
-            var xml =  await SendRequest(requestUri, Timeout, CancellationToken.None);
+            var xml = await SendRequest(requestUri, Timeout, CancellationToken.None);
             return XDocument.Parse(xml);
         }
     }

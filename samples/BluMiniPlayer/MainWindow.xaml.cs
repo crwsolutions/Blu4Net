@@ -145,8 +145,8 @@ namespace BluMiniPlayer
         public PlayerState PlayerState
         {
             get { return _playerState; }
-            set 
-            { 
+            set
+            {
                 if (SetPropertyValue(ref _playerState, value))
                 {
                     PauseButton.Visibility = PlayerState == PlayerState.Paused ? Visibility.Collapsed : Visibility.Visible;
@@ -173,7 +173,7 @@ namespace BluMiniPlayer
         {
             if (sender is FrameworkElement element)
             {
-                switch(element.Tag)
+                switch (element.Tag)
                 {
                     case "Back":
                         if (_backAction == null)
@@ -196,7 +196,7 @@ namespace BluMiniPlayer
                         {
                             await Player.Skip();
                         }
-                        else 
+                        else
                         {
                             await Player.Action(_skipAction);
                         }

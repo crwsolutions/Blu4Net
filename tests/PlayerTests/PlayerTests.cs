@@ -2,7 +2,6 @@ using Blu4Net;
 using Blu4Net.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -42,7 +41,8 @@ namespace PlayerTests
                 {
                     await Player.SetVolume(previous.Percentage + 1);
                     await completion.Task;
-                };
+                }
+                ;
             }
             finally
             {
@@ -70,7 +70,8 @@ namespace PlayerTests
                     {
                         await Player.Pause();
                         await completion.Task;
-                    };
+                    }
+                    ;
                 }
                 finally
                 {
@@ -99,7 +100,8 @@ namespace PlayerTests
                 {
                     await Player.SetShuffleMode(ShuffleMode.ShuffleOn);
                     await completion.Task;
-                };
+                }
+                ;
             }
             finally
             {
@@ -127,7 +129,8 @@ namespace PlayerTests
                 {
                     await Player.SetRepeatMode(RepeatMode.RepeatAll);
                     await completion.Task;
-                };
+                }
+                ;
             }
             finally
             {
